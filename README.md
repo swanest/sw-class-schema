@@ -1,4 +1,4 @@
-# sw-decorators
+# sw-class-schema
 
 Useful helper to construct and deconstruct objects over http requests.
 This module re-exports validators from [Swanest' class-validator fork](https://github.com/swanest/class-validator) and sanitzers from [class-sanitizer](https://github.com/pleerock/class-sanitizer/)
