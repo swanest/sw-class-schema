@@ -1,8 +1,8 @@
 {
-  "name": "sw-decorators",
+  "name": "sw-class-schema",
   "repository": {
     "type": "git",
-    "url": "https://github.com/swanest/sw-decorators"
+    "url": "https://github.com/swanest/sw-class-schema"
   },
   "version": "1.0.0",
   "scripts": {
@@ -19,16 +19,18 @@
   ],
   "dependencies": {
     "class-sanitizer": "0.0.2",
+    "lodash": "^4.17.4",
+    "source-map-support": "^0.4.8",
     "sw-class-validator": "^1.0.2",
-    "lodash": "^4.15.0",
-    "sw-logger": "^1.0.0",
+    "sw-logger": "^1.0.2",
     "when": "^3.7.7"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
-    "@types/lodash": "^4.14.44",
+    "@types/lodash": "^4.14.47",
     "@types/mocha": "^2.2.32",
     "@types/node": "^6.0.42",
+    "@types/source-map-support": "^0.2.28",
     "@types/when": "^2.4.28",
     "chai": "^3.5.0",
     "es6-shim": "^0.35.2",
