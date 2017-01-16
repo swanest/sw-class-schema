@@ -118,7 +118,9 @@ export abstract class Schema {
                 configurable: true
             },
         });
-        //fields, toSchema, fromSchema are prohibitted
+        //todo: fields `toSchema`, `toJSON`, `fromSchema` are prohibited
+        if (this._declaredFields.size == 0)
+            throw new CustomError('noDeclaredFields', 'one declared field is at least required', 500, 'fatal');
     }
 
 
@@ -126,7 +128,7 @@ export abstract class Schema {
         let obj: any = {};
         for (let [k,v] of this._declaredFields) {
             if (v != void 0) { //Nested object
-                if ((this as any)[k].toSchema == void 0)
+                if ((this as any)[k] == void 0 || (this as any)[k].toSchema == void 0)
                     throw new CustomError("toSchemaMissing", "method toSchema() is missing on object %k", k, "fatal");
                 obj[k] = (this as any)[k].toSchema();
             }
