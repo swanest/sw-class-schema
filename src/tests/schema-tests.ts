@@ -13,13 +13,8 @@ import {
     ValidateIf,
     IsEmail,
     IsFQDN, Strict, IsDatable, ToDate
-} from '../src/index';
+} from '../index';
 
-import * as SourceMap from 'source-map-support';
-
-SourceMap.install({
-    handleUncaughtExceptions: true
-});
 
 let tracer = new Logger();
 
@@ -139,6 +134,8 @@ describe("Schemas", () => {
             @Contains("patrick")
             name: string;
 
+            extra: Date;
+
             constructor() {
                 super("age", "name");
             }
@@ -176,6 +173,7 @@ describe("Schemas", () => {
             }
         };
         let b: Post = await Post.fromSchema<Post>(req);
+        b.user.extra = new Date();
         delete req.user.camembert;
         expect(JSON.parse(JSON.stringify(b))).to.have.all.keys(_.keys(req));
     });

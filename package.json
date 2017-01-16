@@ -4,10 +4,10 @@
     "type": "git",
     "url": "https://github.com/swanest/sw-class-schema"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --opts tests/mocha.opts tests/**/*.ts",
-    "build": "rm -rf dist && ./node_modules/typescript/bin/tsc -p . && rm -rf dist/tests && mv dist/src/** dist/ && rm -rf dist/src",
+    "test": "./node_modules/.bin/mocha --opts ./src/tests/mocha.opts ./src/tests/*.ts",
+    "build": "rm -rf dist && ./node_modules/typescript/bin/tsc && rm -rf ./dist/tests",
     "prepublish": "npm run build"
   },
   "main": "dist/index.js",
