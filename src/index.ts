@@ -128,12 +128,16 @@ export abstract class Schema {
             if (v != void 0) { //Nested object
                 if ((this as any)[k].toSchema == void 0)
                     throw new CustomError("toSchemaMissing", "method toSchema() is missing on object %k", k, "fatal");
-                obj[k] =  (this as any)[k].toSchema();
+                obj[k] = (this as any)[k].toSchema();
             }
             else
                 obj[k] = (this as any)[k];
         }
         return obj;
+    }
+
+    public toJSON(): Object {
+        return this.toSchema();
     }
 
     private async _populateFromSchema(schema: any): Promise<any> {

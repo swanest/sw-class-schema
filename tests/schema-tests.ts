@@ -177,7 +177,7 @@ describe("Schemas", () => {
         };
         let b: Post = await Post.fromSchema<Post>(req);
         delete req.user.camembert;
-        expect(b.toSchema()).to.have.all.keys(_.keys(req));
+        expect(JSON.parse(JSON.stringify(b))).to.have.all.keys(_.keys(req));
     });
 
 
