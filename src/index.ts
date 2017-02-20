@@ -126,11 +126,15 @@ export abstract class Schema {
 
     public toSchema(): Object {
         let obj: any = {};
-        for (let [k,v] of this._declaredFields) {
+        for (let [k, v] of this._declaredFields) {
             if (v != void 0 && (this as any)[k] != void 0) { //Nested object
-                if ((this as any)[k].toSchema == void 0)
+                let targetSchema = (this as any)[k];
+                if (_.isArray(targetSchema)) {
+                    targetSchema = targetSchema[0];
+                }
+                if (targetSchema.toSchema == void 0)
                     throw new CustomError("toSchemaMissing", "method toSchema() is missing on object %k", k, "fatal");
-                obj[k] = (this as any)[k].toSchema();
+                obj[k] = targetSchema.toSchema();
             }
             else
                 obj[k] = (this as any)[k];
@@ -150,6 +154,22 @@ export abstract class Schema {
                 this._unregisteredFields.push(k);
             else if (this._declaredFields.get(k) == void 0)
                 _this[k] = v;
+            else if (_.isArray(this._declaredFields.get(k))) {
+                if (!_.isArray(schema[k])) {
+                    throw new CustomError("invalidData", "%k is declared as an Array of %s but supplied data isn't an array", k, this._declaredFields.get(k)[0].name, "fatal");
+                }
+                _this[k] = [];
+                for (let el of schema[k]) {
+                    let sub = new (this._declaredFields.get(k)[0])();
+                    if (sub._populateFromSchema == void 0)
+                        throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
+                    if (_.isPlainObject(el)) {
+                        _this[k].push(await sub._populateFromSchema(el));
+                    } else {
+                        throw new CustomError("parseError", "%k is declared as an Array of %s but you supplied %o", k, _this._declaredFields.get(k)[0].name, el, "fatal");
+                    }
+                }
+            }
             else {
                 let sub = new (this._declaredFields.get(k))();
                 if (sub._populateFromSchema == void 0)
@@ -167,8 +187,9 @@ export abstract class Schema {
             await (_this as any)._populateFromSchema(schema);
         //Validate
         let errors = await validate(_this, {validationError: {target: false}});
-        if (errors.length)
+        if (errors.length) {
             throw new CustomError("invalidSchema", "schema is invalid", {validationErrors: errors}, 500, "fatal");
+        }
         sanitize(_this);
         return _this;
     }

@@ -124,12 +124,72 @@ describe("Schemas", () => {
         expect(b).to.be.instanceof(Post);
     });
 
+    it("fromSchema() with array types should pass", async function () {
+        this.timeout(2000000);
+        class User extends Schema {
+            @Strict(false)
+            @Min(12) @Max(15)
+            age: number;
+            @Contains("patrick")
+            name: string;
+
+            constructor() {
+                super("age", "name");
+            }
+        }
+        class Post extends Schema {
+            @Strict(true)
+            @IsDefined() @ValidateNested()
+            user: User;
+            @Length(5, 20)
+            title: string;
+            @Contains("hello") @Length(10, 200)
+            text: string;
+            @IsDatable()
+            @ToDate()
+            date: Date;
+            @ValidateIf(obj => obj.email != void 0) @IsEmail()
+            email: string;
+            @IsFQDN()
+            site: string;
+            @IsDefined() @ValidateNested({each: true})
+            users: Array<User>;
+
+            constructor() {
+                super({user: User}, "title", "text", "date", "email", "site", {users: [User]});
+            }
+        }
+        let req = {
+            title: "Hello",
+            text: "hello this blabla",
+            email: "okok@okok.com",
+            site: "www.okok.com",
+            date: "2015-05-05T14:56:43.854Z",
+            user: {
+                camembert: 3,
+                name: "patrick",
+                age: 12
+            },
+            users: [{
+                camembert: 3,
+                name: "patrick",
+                age: 15
+            }, {
+                camembert: 3,
+                name: "patrick",
+                age: 14
+            }]
+        };
+        let b: Post = await Post.fromSchema<Post>(req);
+        expect(b).to.be.instanceof(Post);
+    });
+
 
     it("toSchema() should pass", async function () {
         this.timeout(2000000);
         class User extends Schema {
             @Strict(false)
-            @Min(12) @Max(12)
+            @Min(12) @Max(14)
             age: number;
             @Contains("patrick")
             name: string;
@@ -155,9 +215,11 @@ describe("Schemas", () => {
             email: string;
             @IsFQDN()
             site: string;
+            @IsDefined() @ValidateNested({each: true})
+            users: Array<User>;
 
             constructor() {
-                super({user: User}, "title", "text", "date", "email", "site");
+                super({user: User}, "title", "text", "date", "email", "site", {users: [User]});
             }
         }
         let req = {
@@ -170,7 +232,16 @@ describe("Schemas", () => {
                 camembert: 3,
                 name: "patrick",
                 age: 12
-            }
+            },
+            users: [{
+                camembert: 3,
+                name: "patrick",
+                age: 13
+            }, {
+                camembert: 3,
+                name: "patrick",
+                age: 14
+            }]
         };
         let b: Post = await Post.fromSchema<Post>(req);
         b.user.extra = new Date();

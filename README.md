@@ -68,8 +68,11 @@ class Post extends Schema {
     @ToDate() //When an object is stringified, Date objects become ISO strings, so to reconstruct, we use ToDate formatter 
     date: Date;
     
+    @IsDefined() @ValidateNested({each: true}) // Special case for arrays, see super as well
+    users: Array<User>;
+    
     constructor() { //Never forget it !
-        super({user: User}, "title", "text", "date");
+        super({user: User}, "title", "text", "date", {user: [User]});
     }
     
  }
