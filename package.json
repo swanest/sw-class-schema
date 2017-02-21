@@ -21,7 +21,7 @@
     "class-sanitizer": "0.0.2",
     "lodash": "^4.17.4",
     "source-map-support": "^0.4.8",
-    "sw-class-validator": "^1.0.2",
+    "class-validator": "^0.6.8",
     "sw-logger": "^1.0.2",
     "when": "^3.7.7"
   },

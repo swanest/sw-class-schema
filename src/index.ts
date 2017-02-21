@@ -1,8 +1,8 @@
 import * as _ from "lodash";
 import {CustomError, Logger} from 'sw-logger';
-import {validate, ValidationOptions, registerDecorator, ValidationArguments} from "sw-class-validator";
+import {validate, ValidationOptions, registerDecorator, ValidationArguments} from "class-validator";
 import {sanitize} from 'class-sanitizer';
-export * from 'sw-class-validator';
+export * from 'class-validator';
 export * from 'class-sanitizer';
 const tracer = new Logger();
 
@@ -163,19 +163,21 @@ export abstract class Schema {
                     let sub = new (this._declaredFields.get(k)[0])();
                     if (sub._populateFromSchema == void 0)
                         throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
-                    if (_.isPlainObject(el)) {
-                        _this[k].push(await sub._populateFromSchema(el));
-                    } else {
-                        throw new CustomError("parseError", "%k is declared as an Array of %s but you supplied %o", k, _this._declaredFields.get(k)[0].name, el, "fatal");
-                    }
+                    // if (_.isPlainObject(el)) {
+                    _this[k].push(await sub._populateFromSchema(el));
+                    // } else {
+                    //     throw new CustomError("parseError", "%k is declared as an Array of %s but you supplied '%o'", k, _this._declaredFields.get(k)[0].name, el, "fatal");
+                    // }
                 }
             }
             else {
                 let sub = new (this._declaredFields.get(k))();
                 if (sub._populateFromSchema == void 0)
                     throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
-                if (_.isPlainObject(schema[k]))
-                    _this[k] = await sub._populateFromSchema(schema[k]);
+                // if (_.isPlainObject(schema[k]))
+                _this[k] = await sub._populateFromSchema(schema[k]);
+                // else
+                //     throw new CustomError("parseError", "%k is declared as a tpye '%s' but you supplied an %s (%s)", k, _this._declaredFields.get(k).name, typeof schema[k], schema[k], "fatal");
             }
         }
         return _this;
