@@ -158,17 +158,18 @@ export abstract class Schema {
                 if (!_.isArray(schema[k])) {
                     // throw new CustomError("invalidData", "%k is declared as an Array of %s but supplied data isn't an array", k, this._declaredFields.get(k)[0].name, "fatal");
                     _this[k] = await (new (this._declaredFields.get(k)[0])())._populateFromSchema(schema[k]);
-                }
-                _this[k] = [];
-                for (let el of schema[k]) {
-                    let sub = new (this._declaredFields.get(k)[0])();
-                    if (sub._populateFromSchema == void 0)
-                        throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
-                    // if (_.isPlainObject(el)) {
-                    _this[k].push(await sub._populateFromSchema(el));
-                    // } else {
-                    //     throw new CustomError("parseError", "%k is declared as an Array of %s but you supplied '%o'", k, _this._declaredFields.get(k)[0].name, el, "fatal");
-                    // }
+                } else {
+                    _this[k] = [];
+                    for (let el of schema[k]) {
+                        let sub = new (this._declaredFields.get(k)[0])();
+                        if (sub._populateFromSchema == void 0)
+                            throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
+                        // if (_.isPlainObject(el)) {
+                        _this[k].push(await sub._populateFromSchema(el));
+                        // } else {
+                        //     throw new CustomError("parseError", "%k is declared as an Array of %s but you supplied '%o'", k, _this._declaredFields.get(k)[0].name, el, "fatal");
+                        // }
+                    }
                 }
             }
             else {
