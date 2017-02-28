@@ -155,10 +155,7 @@ export abstract class Schema {
             else if (this._declaredFields.get(k) == void 0)
                 _this[k] = v;
             else if (_.isArray(this._declaredFields.get(k))) {
-                if (!_.isArray(schema[k])) {
-                    // throw new CustomError("invalidData", "%k is declared as an Array of %s but supplied data isn't an array", k, this._declaredFields.get(k)[0].name, "fatal");
-                    _this[k] = await (new (this._declaredFields.get(k)[0])())._populateFromSchema(schema[k]);
-                } else {
+                if (_.isArray(schema[k])) {
                     _this[k] = [];
                     for (let el of schema[k]) {
                         let sub = new (this._declaredFields.get(k)[0])();
