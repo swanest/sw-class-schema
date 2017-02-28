@@ -130,11 +130,18 @@ export abstract class Schema {
             if (v != void 0 && (this as any)[k] != void 0) { //Nested object
                 let targetSchema = (this as any)[k];
                 if (_.isArray(targetSchema)) {
-                    targetSchema = targetSchema[0];
+                    // targetSchema = targetSchema[0];
+                    obj[k] = [];
+                    for (let cur of targetSchema) {
+                        if ((cur as any).toSchema == void 0)
+                            throw new CustomError("toSchemaMissing", "method toSchema() is missing on object %k", k, "fatal");
+                        obj[k].push((cur as any).toSchema());
+                    }
+                } else {
+                    if (targetSchema.toSchema == void 0)
+                        throw new CustomError("toSchemaMissing", "method toSchema() is missing on object %k", k, "fatal");
+                    obj[k] = targetSchema.toSchema();
                 }
-                if (targetSchema.toSchema == void 0)
-                    throw new CustomError("toSchemaMissing", "method toSchema() is missing on object %k", k, "fatal");
-                obj[k] = targetSchema.toSchema();
             }
             else
                 obj[k] = (this as any)[k];
@@ -167,6 +174,8 @@ export abstract class Schema {
                         //     throw new CustomError("parseError", "%k is declared as an Array of %s but you supplied '%o'", k, _this._declaredFields.get(k)[0].name, el, "fatal");
                         // }
                     }
+                } else {
+                    _this[k] = null;
                 }
             }
             else {

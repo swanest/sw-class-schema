@@ -262,6 +262,7 @@ describe("Schemas", () => {
         b.user.extra = new Date();
         delete req.user.camembert;
         expect(JSON.parse(JSON.stringify(b))).to.have.all.keys(_.keys(req));
+        expect(JSON.parse(JSON.stringify(b)).users).to.be.instanceOf(Array);
     });
 
 
