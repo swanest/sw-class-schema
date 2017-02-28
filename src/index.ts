@@ -143,7 +143,7 @@ export abstract class Schema {
                     obj[k] = targetSchema.toSchema();
                 }
             }
-            else
+            else if (typeof (this as any)[k] != 'undefined')
                 obj[k] = (this as any)[k];
         }
         return obj;
