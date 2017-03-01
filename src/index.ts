@@ -1,9 +1,9 @@
 import * as _ from "lodash";
 import {CustomError, Logger} from 'sw-logger';
 import {validate, ValidationOptions, registerDecorator, ValidationArguments} from "class-validator";
-import {sanitize} from 'class-sanitizer';
+import {sanitize} from 'sw-class-sanitizer';
 export * from 'class-validator';
-export * from 'class-sanitizer';
+export * from 'sw-class-sanitizer';
 const tracer = new Logger();
 
 
