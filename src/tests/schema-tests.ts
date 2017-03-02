@@ -8,13 +8,11 @@ import {
     Contains,
     ValidateNested,
     IsDefined,
-    IsDate,
     Length,
     ValidateIf,
     IsEmail,
     IsFQDN, Strict, IsDatable, ToDate
 } from '../index';
-
 
 let tracer = new Logger();
 
