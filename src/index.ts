@@ -9,40 +9,6 @@ export * from 'class-validator';
 export * from 'sw-class-sanitizer';
 const tracer = new Logger();
 
-// export function strict(isStrict: boolean) {
-//     return function (target: any, propertyName?:string, parameterIndex?:number) {
-//         if (isStrict != true) {
-//             return target;
-//         }
-//         // The new constructor behaviour
-//         let f: any = function (...args: Array<any>) {
-//             let c = new target(...args);
-//             console.log("registering isStrict", c);
-//             registerDecorator({
-//                 name: "isStrict",
-//                 target: c.constructor,
-//                 propertyName: "#",
-//                 options: {
-//                     message: (value?: any, constraint1?: any, constraint2?: any) => {
-//                         return `keys [${value.object._unregisteredFields.toString()}] are not allowed in strict mode`;
-//                     }
-//                 } as ValidationOptions,
-//                 validator: {
-//                     validate(value: any, args: ValidationArguments) {
-//                         console.log("validate-strict", args.object);
-//                         return (args.object as any)._unregisteredFields.length == 0;
-//                     }
-//                 }
-//             });
-//             return c;
-//         }.bind(this);
-//         // copy prototype so intanceof operator still works
-//         f.prototype = target.prototype;
-//         // return new constructor (will override target)
-//         return f;
-//     };
-// };
-
 
 export function IsDatable(validationOptions?: ValidationOptions) {
     return function (object: Object, propertyName: string) {
@@ -164,30 +130,23 @@ export abstract class Schema {
             else if (this._declaredFields.get(k) == void 0)
                 _this[k] = v;
             else if (_.isArray(this._declaredFields.get(k))) {
-                if (_.isArray(schema[k])) {
-                    _this[k] = [];
-                    for (let el of schema[k]) {
-                        let sub = new (this._declaredFields.get(k)[0])();
-                        if (sub._populateFromSchema == void 0)
-                            throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
-                        // if (_.isPlainObject(el)) {
-                        _this[k].push(await sub._populateFromSchema(el));
-                        // } else {
-                        //     throw new CustomError("parseError", "%k is declared as an Array of %s but you supplied '%o'", k, _this._declaredFields.get(k)[0].name, el, "fatal");
-                        // }
-                    }
-                } else {
-                    _this[k] = null;
+                let arrV = schema[k];
+                if (!_.isArray(arrV)) {
+                    arrV = [null];
+                }
+                _this[k] = [];
+                for (let el of arrV) {
+                    let sub = new (this._declaredFields.get(k)[0])();
+                    if (sub._populateFromSchema == void 0)
+                        throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
+                    _this[k].push(await sub._populateFromSchema(el));
                 }
             }
             else {
                 let sub = new (this._declaredFields.get(k))();
                 if (sub._populateFromSchema == void 0)
                     throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
-                // if (_.isPlainObject(schema[k]))
                 _this[k] = await sub._populateFromSchema(schema[k]);
-                // else
-                //     throw new CustomError("parseError", "%k is declared as a tpye '%s' but you supplied an %s (%s)", k, _this._declaredFields.get(k).name, typeof schema[k], schema[k], "fatal");
             }
         }
         return _this;

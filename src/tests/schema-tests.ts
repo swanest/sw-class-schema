@@ -14,6 +14,26 @@ import {
     IsFQDN, Strict, IsDatable, ToDate
 } from '../index';
 
+
+
+function humanizeValidationErrors(errorsValidation: Array<any>): Object {
+    let objError: any = {};
+
+    function recur(vErrors: Array<any>, obj: any, path: string) {
+        for (let i = 0; i < vErrors.length; i++) {
+            let vErr = vErrors[i];
+            if (vErr.children.length) {
+                recur(vErr.children, obj, path + vErr.property + '/');
+            } else {
+                obj[path + vErr.property + '/'] = {value: vErr.value, constraints: vErr.constraints};
+            }
+        }
+    }
+
+    recur(errorsValidation, objError, '/');
+    return objError;
+}
+
 let tracer = new Logger();
 
 describe("Schemas", () => {
@@ -51,8 +71,11 @@ describe("Schemas", () => {
             @IsDefined() @ValidateNested()
             users: Array<User>;
 
+            @IsDefined() @ValidateNested()
+            users2: Array<User>;
+
             constructor() {
-                super({user: User}, {user2: User}, "title", "text", "date", "email", "site", {users: [User]});
+                super({user: User}, {user2: User}, "title", "text", "date", "email", "site", {users: [User]}, {users2: [User]});
             }
         }
         let req = {
@@ -68,21 +91,23 @@ describe("Schemas", () => {
                 name: "patric",
                 age: 12
             },
-            users: [{
-                camembert: 3,
-                name: "patrick",
-                age: 13
-            }, {
-                camembert: 3,
-                name: "patrick",
-                age: 13
-            }]
+            users: [
+                {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 13
+                }, {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 13
+                }],
+            users2: {}
         };
         try {
             let b: Post = await Post.fromSchema<Post>(req);
             throw new Error("not expected to pass");
         } catch (e) {
-            expect(e.info.validationErrors).to.have.lengthOf(4);
+            expect(e.info.validationErrors).to.have.lengthOf(5);
             expect(e.info.validationErrors[3].children).to.have.lengthOf(2);
         }
     });
@@ -183,15 +208,16 @@ describe("Schemas", () => {
                 name: "patrick",
                 age: 12
             },
-            users: [{
-                camembert: 3,
-                name: "patrick",
-                age: 15
-            }, {
-                camembert: 3,
-                name: "patrick",
-                age: 14
-            }]
+            users: [
+                {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 15
+                }, {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 14
+                }]
         };
         let b: Post = await Post.fromSchema<Post>(req);
         expect(b).to.be.instanceof(Post);
@@ -246,15 +272,16 @@ describe("Schemas", () => {
                 name: "patrick",
                 age: 12
             },
-            users: [{
-                camembert: 3,
-                name: "patrick",
-                age: 13
-            }, {
-                camembert: 3,
-                name: "patrick",
-                age: 14
-            }]
+            users: [
+                {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 13
+                }, {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 14
+                }]
         };
         let b: Post = await Post.fromSchema<Post>(req);
         b.user.extra = new Date();
