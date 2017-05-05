@@ -2,13 +2,12 @@ import * as _ from "lodash";
 import {CustomError, Logger} from 'sw-logger';
 import {
     validate, ValidationOptions, registerDecorator, ValidationArguments, IsURLOptions,
-    IsCurrencyOptions, IsEmailOptions, IsFQDNOptions
+    IsCurrencyOptions, IsEmailOptions, IsFQDNOptions, getFromContainer
 } from "class-validator";
 import {sanitize} from 'sw-class-sanitizer';
+import {MetadataStorage} from 'class-validator/metadata/MetadataStorage';
 export * from 'class-validator';
 export * from 'sw-class-sanitizer';
-const tracer = new Logger();
-
 
 export function IsDatable(validationOptions?: ValidationOptions) {
     return function (object: Object, propertyName: string) {
@@ -56,7 +55,7 @@ export function Strict(isStrict: boolean, validationOptions?: ValidationOptions)
 
 export abstract class Schema {
 
-    private _declaredFields: Map<string,any>;
+    private _declaredFields: Map<string, any>;
     private _unregisteredFields: Array<string>;
 
     constructor(...fields: Array<any>) {
@@ -68,7 +67,7 @@ export abstract class Schema {
             else if (_.isPlainObject(f))
                 declaredFields.set(_.keys(f)[0], f[_.keys(f)[0]]);
             else
-                throw new CustomError("invalidField", "field %k must be either a string or a composed key {key:constructor}", f, 500, "fatal");
+                throw new CustomError("invalidField", "field %k must be either a string or a composed key {key:constructor} or {key:[constructor]}", f, 500, "fatal");
         });
         Object.defineProperties(this, {
             _declaredFields: {
@@ -130,6 +129,10 @@ export abstract class Schema {
             else if (this._declaredFields.get(k) == void 0)
                 _this[k] = v;
             else if (_.isArray(this._declaredFields.get(k))) {
+                if (!arrayNeedsValidation(k, _this, schema)) {
+                    _this[k] = v;
+                    continue;
+                }
                 let arrV = schema[k];
                 if (!_.isArray(arrV)) {
                     arrV = [null];
@@ -156,7 +159,6 @@ export abstract class Schema {
         let _this: T = new (this as any).prototype.constructor(); //new instance
         if (_.isPlainObject(schema))
             await (_this as any)._populateFromSchema(schema);
-        //Validate
         let errors = await validate(_this, {validationError: {target: false}});
         if (errors.length) {
             throw new CustomError("invalidSchema", "schema is invalid", {validationErrors: errors}, 500, "fatal");
@@ -164,6 +166,19 @@ export abstract class Schema {
         sanitize(_this);
         return _this;
     }
+}
+
+function arrayNeedsValidation(propertyName: string, klass: any, target: any) {
+    const validators = getFromContainer(MetadataStorage).getTargetValidationMetadatas(klass.constructor, klass.constructor.name);
+    const conditionalValidations = _.filter(validators, {propertyName: propertyName, type: 'conditionalValidation'});
+    if (conditionalValidations == void 0 || conditionalValidations.length === 0) {
+        return true;
+    }
+    return _.every(conditionalValidations, (cond: any) => {
+        return _.every(cond.constraints, (fn: Function) => {
+            return fn(target);
+        });
+    });
 }
 
 
@@ -428,11 +443,13 @@ export declare function IsHexadecimal(validationOptions?: ValidationOptions): (o
 /**
  * Checks if the string is an IP (version 4 or 6).
  */
-export declare function IsIP(version?: "4" | "6", validationOptions?: ValidationOptions): (object: Object, propertyName: string) => void;
+export declare function IsIP(version?: "4"
+    | "6", validationOptions?: ValidationOptions): (object: Object, propertyName: string) => void;
 /**
  * Checks if the string is an ISBN (version 10 or 13).
  */
-export declare function IsISBN(version?: "10" | "13", validationOptions?: ValidationOptions): (object: Object, propertyName: string) => void;
+export declare function IsISBN(version?: "10"
+    | "13", validationOptions?: ValidationOptions): (object: Object, propertyName: string) => void;
 /**
  * Checks if the string is an ISIN (stock/security identifier).
  */
@@ -473,7 +490,9 @@ export declare function IsUrl(options?: IsURLOptions, validationOptions?: Valida
 /**
  * Checks if the string is a UUID (version 3, 4 or 5).
  */
-export declare function IsUUID(version?: "3" | "4" | "5", validationOptions?: ValidationOptions): (object: Object, propertyName: string) => void;
+export declare function IsUUID(version?: "3"
+    | "4"
+    | "5", validationOptions?: ValidationOptions): (object: Object, propertyName: string) => void;
 /**
  * Checks if the string is uppercase.
  */
