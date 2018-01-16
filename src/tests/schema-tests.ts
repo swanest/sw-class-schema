@@ -35,10 +35,13 @@ function humanizeValidationErrors(errorsValidation: Array<any>): Object {
 
 let tracer = new Logger();
 
-describe("Schemas", () => {
+describe("Schemas", function () {
+
+    this.slow(5);
 
     it("fromSchema() should fail", async function () {
         this.timeout(2000000);
+
         class User extends Schema {
             @Strict(false)
             @Min(12) @Max(12)
@@ -50,6 +53,7 @@ describe("Schemas", () => {
                 super("age", "name");
             }
         }
+
         class Post extends Schema {
             @Strict(true)
             @IsDefined() @ValidateNested()
@@ -77,6 +81,7 @@ describe("Schemas", () => {
                 super({user: User}, {user2: User}, "title", "text", "date", "email", "site", {users: [User]}, {users2: [User]});
             }
         }
+
         let req = {
             title: "Hello",
             text: "hello this blabla",
@@ -114,6 +119,7 @@ describe("Schemas", () => {
 
     it("fromSchema() should pass", async function () {
         this.timeout(2000000);
+
         class User extends Schema {
             @Strict(false)
             @Min(12) @Max(12)
@@ -125,6 +131,7 @@ describe("Schemas", () => {
                 super("age", "name");
             }
         }
+
         class Post extends Schema {
             @Strict(true)
             @IsDefined() @ValidateNested()
@@ -145,6 +152,7 @@ describe("Schemas", () => {
                 super({user: User}, "title", "text", "date", "email", "site");
             }
         }
+
         let req = {
             title: "Hello",
             text: "hello this blabla",
@@ -163,6 +171,7 @@ describe("Schemas", () => {
 
     it("fromSchema() with array types should pass", async function () {
         this.timeout(2000000);
+
         class User extends Schema {
             @Strict(false)
             @Min(12) @Max(15)
@@ -174,6 +183,7 @@ describe("Schemas", () => {
                 super("age", "name");
             }
         }
+
         class Post extends Schema {
             @Strict(true)
             @IsDefined() @ValidateNested()
@@ -200,6 +210,7 @@ describe("Schemas", () => {
                 super({user: User}, "title", "text", "date", "email", "site", {users: [User]}, {users2: [User]}, {users3: [User]});
             }
         }
+
         let req: any = {
             title: "Hello",
             text: "hello this blabla",
@@ -236,6 +247,7 @@ describe("Schemas", () => {
 
     it("toSchema() should fail", async function () {
         this.timeout(2000000);
+
         class User extends Schema {
             @Strict(false)
             @Min(12) @Max(14)
@@ -249,6 +261,7 @@ describe("Schemas", () => {
                 super("age", "name");
             }
         }
+
         class Post extends Schema {
             @Strict(true)
             @IsDefined() @ValidateNested()
@@ -273,6 +286,7 @@ describe("Schemas", () => {
                 super({user: User}, "title", "text", "date", "email", "site", {users: [User]}, {users2: [User]});
             }
         }
+
         let req: any = {
             title: "Hello",
             text: "hello this blabla",
@@ -308,6 +322,7 @@ describe("Schemas", () => {
 
     it("toSchema() should pass", async function () {
         this.timeout(2000000);
+
         class User extends Schema {
             @Strict(false)
             @Min(12) @Max(14)
@@ -321,6 +336,7 @@ describe("Schemas", () => {
                 super("age", "name");
             }
         }
+
         class Post extends Schema {
             @Strict(true)
             @IsDefined() @ValidateNested()
@@ -345,6 +361,7 @@ describe("Schemas", () => {
                 super({user: User}, "title", "text", "date", "email", "site", {users: [User]}, {users2: [User]});
             }
         }
+
         let req: any = {
             title: "Hello",
             text: "hello this blabla",
@@ -373,6 +390,116 @@ describe("Schemas", () => {
         delete req.user.camembert;
         expect(JSON.parse(JSON.stringify(b))).to.have.all.keys(_.keys(req));
         expect(JSON.parse(JSON.stringify(b)).users).to.be.instanceOf(Array);
+    });
+
+
+    it("fromSchema(), toSchema() iteratively", async function () {
+        this.timeout(2000000);
+        class Metadata extends Schema {
+            @Strict(true)
+            @Min(12) @Max(14)
+            prop1: number;
+            @Contains("patrick")
+            prop2: string;
+            @Contains("patrick")
+            prop3: string;
+            @IsDatable()
+            prop4: Date;
+            @ValidateNested()
+            metadata: Metadata
+            constructor() {
+                super("age", "name", {metadata: Metadata});
+            }
+        }
+        class User extends Schema {
+            @Strict(false)
+            @Min(12) @Max(14)
+            age: number;
+            @Contains("patrick")
+            name: string;
+            extra: Date;
+            metadata: Metadata
+            constructor() {
+                super("age", "name", {metadata: Metadata});
+            }
+        }
+        class Post extends Schema {
+            @Strict(true)
+            @IsDefined() @ValidateNested()
+            user: User;
+            @Length(5, 20)
+            title: string;
+            @Contains("hello") @Length(10, 200)
+            text: string;
+            @IsDatable()
+            @ToDate()
+            date: Date;
+            @ValidateIf(obj => obj.email != void 0) @IsEmail()
+            email: string;
+            @IsFQDN()
+            site: string;
+            @IsDefined() @ValidateNested({each: true})
+            users: Array<User>;
+            @ValidateIf(o => o.users2 != void 0) @ValidateNested({each: true})
+            users2: Array<User>;
+            constructor() {
+                super({user: User}, "title", "text", "date", "email", "site", {users: [User]}, {users2: [User]});
+            }
+        }
+        let req: any = {
+            title: "Hello",
+            text: "hello this blabla",
+            email: "okok@okok.com",
+            site: "www.okok.com",
+            date: "2015-05-05T14:56:43.854Z",
+            user: {
+                camembert: 3,
+                name: "patrick",
+                age: 12,
+                metadata: {
+                    prop1: 11,
+                    prop2: "patrick",
+                    prop3: "patrick",
+                    prop4: "2010-01-01T00:00:00.000Z",
+                    metadata: {
+                        prop1: 11,
+                        prop2: "patrick",
+                        prop3: "patrick",
+                        prop4: "2010-01-01T00:00:00.000Z"
+                    }
+                }
+            },
+            users: [
+                {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 13,
+                    metadata: {
+                        prop1: 11,
+                        prop2: "patrick",
+                        prop3: "patrick",
+                        prop4: "2010-01-01T00:00:00.000Z"
+                    }
+                }, {
+                    camembert: 3,
+                    name: "patrick",
+                    age: 14,
+                    metadata: {
+                        prop1: 11,
+                        prop2: "patrick",
+                        prop3: "patrick",
+                        prop4: "2010-01-01T00:00:00.000Z"
+                    }
+                }],
+            users2: null
+        };
+        let proms = [];
+        for (let i = 0; i < 1000; i++) {
+            proms.push(Post.fromSchema<Post>(req, false, true).then(function (obj) {
+                return obj.toJSON();
+            }))
+        }
+        await Promise.all(proms);
     });
 
 
