@@ -125,11 +125,12 @@ export abstract class Schema {
         let _this: any = this;
         for (let k in schema) {
             let v = schema[k];
+            const kDeclared = this._declaredFields.get(k);
             if (!this._declaredFields.has(k))
                 this._unregisteredFields.push(k);
-            else if (this._declaredFields.get(k) == void 0)
+            else if (kDeclared == void 0)
                 _this[k] = v;
-            else if (_.isArray(this._declaredFields.get(k))) {
+            else if (_.isArray(kDeclared)) {
                 if (!arrayNeedsValidation(k, _this, schema)) {
                     _this[k] = v;
                     continue;
@@ -140,7 +141,7 @@ export abstract class Schema {
                 }
                 _this[k] = [];
                 for (let el of arrV) {
-                    let sub = new (this._declaredFields.get(k)[0])();
+                    let sub = new (kDeclared[0] as any)();
                     if (sub._populateFromSchema == void 0)
                         throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
 
@@ -149,7 +150,7 @@ export abstract class Schema {
                 }
             }
             else {
-                let sub = new (this._declaredFields.get(k))();
+                let sub = new (kDeclared)();
                 if (sub._populateFromSchema == void 0)
                     throw new CustomError("fromSchemaMissing", "method fromSchema() is missing on object %k", k, "fatal");
                 _this[k] = await sub._populateFromSchema(schema[k]);
